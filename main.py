@@ -2,9 +2,12 @@ from flask import Flask, render_template, request, redirect, url_for
 import os
 from os.path import join, dirname, realpath
 
+import numpy as np
 import pandas as pd
-import mysql.connector
-
+import pickle 
+#import mysql.connector
+import psycopg2
+from sqlalchemy import create_engine
 
 app = Flask(__name__)
 
@@ -16,21 +19,30 @@ UPLOAD_FOLDER = 'static/files'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
-# Database
-mydb = mysql.connector.connect(
-    host='localhost',
-    user='root',
-    password='',
-    database='csvdata'
-)
+# Create Database
 
-mycursor = mydb.cursor()
 
-mycursor.execute('SHOW DATABASES')
+# Connect Database
+conn = psycopg2.connect(database='firm', user="postgres", password='insights', host='localhost', port='5432')
+# engine = create_engine("postgresql://postgres:galvanize@localhost:5000/csvdata")
+
+cur = conn.cursor()
+
+# # mysql attempt
+# mydb = mysql.connector.connect(
+#     host='localhost',
+#     user='root',
+#     password='',
+#     database='csvdata'
+# )
+
+# mycursor = mydb.cursor()
+
+# mycursor.execute('SHOW DATABASES')
 
 # View All Database
-for x in mycursor:
-    print(x)
+# for x in mycursor:
+#     print(x)
 
 # ROOT URL
 @app.route("/")
@@ -66,7 +78,7 @@ def parseCSV(filePath):
 
 
 if (__name__ == "main__"):
-    app.run(port = 5000)
+    app.run(host = '127.0.0.1', port = 5000, debug = True)
 
 # to run
 # $ export FLASK_APP=main
