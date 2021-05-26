@@ -23,7 +23,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
 # Connect Database
-conn = psycopg2.connect(database='firm', user="postgres", password='insights', host='localhost', port='5432')
+conn = psycopg2.connect(database='denver_properties', user="postgres", password='2855Wakonda', host='localhost', port='5432')
 # engine = create_engine("postgresql://postgres:galvanize@localhost:5000/csvdata")
 
 cur = conn.cursor()
@@ -51,7 +51,16 @@ def index():
     return render_template('index.html')
 
 # Get the upload files
-@app.route("/", methods=['POST'])
+@app.route("/upload_project", methods=['POST'])
+def upload_users():
+    first_name = str(request.form['first_name'])
+    last_name = str(request.form['last_name'])
+    email = str(request.form['email'])
+    firm_name = str(request.form['firm_name'])
+
+    query = """INSERT INTO users VALUES (%s, %s, %s, %s)"""
+
+    
 def uploadFiles():
     # get the uploaded file
     uploaded_file = request.files['file']
@@ -77,8 +86,9 @@ def parseCSV(filePath):
             
 
 
-if (__name__ == "main__"):
-    app.run(host = '127.0.0.1', port = 5000, debug = True)
+if (__name__ == "__main__"):
+
+    app.run(host='127.0.0.1', port=5000, debug=True, threaded=True)
 
 # to run
 # $ export FLASK_APP=main
