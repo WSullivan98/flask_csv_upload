@@ -9,59 +9,42 @@ import pickle
 import psycopg2
 from sqlalchemy import create_engine
 
-app = Flask(__name__)
+from datetime import date
 
-# enable debugging moade
+
+app = Flask(__name__)
 app.config["DEBUG"] = True 
 
-# Upload folder
+# Set up Upload folder
 UPLOAD_FOLDER = 'static/files'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
-# Create Database
-
-
 # Connect Database
-conn = psycopg2.connect(database='denver_properties', user="postgres", password='2855Wakonda', host='localhost', port='5432')
+conn = psycopg2.connect(database='firm', user="postgres", password='insights', host='localhost', port='5432')
 # engine = create_engine("postgresql://postgres:galvanize@localhost:5000/csvdata")
 
 cur = conn.cursor()
 
-# # mysql attempt
-# mydb = mysql.connector.connect(
-#     host='localhost',
-#     user='root',
-#     password='',
-#     database='csvdata'
-# )
-
-# mycursor = mydb.cursor()
-
-# mycursor.execute('SHOW DATABASES')
-
-# View All Database
-# for x in mycursor:
-#     print(x)
 
 # ROOT URL
 @app.route("/")
 def index():
-    # Set the upload HTMP template '\tempaltes\index.html'
+    # Set the upload HTML template '\tempaltes\index.html'
     return render_template('index.html')
+
+
+@app.route("/create_user", methods=['POST'])
+def create_user():
+    return render_template('create_user.html')
+
+
+
 
 # Get the upload files
 @app.route("/upload_project", methods=['POST'])
-def upload_users():
-    first_name = str(request.form['first_name'])
-    last_name = str(request.form['last_name'])
-    email = str(request.form['email'])
-    firm_name = str(request.form['firm_name'])
-
-    query = """INSERT INTO users VALUES (%s, %s, %s, %s)"""
-
-    
 def uploadFiles():
+    upload_users()
     # get the uploaded file
     uploaded_file = request.files['file']
     if uploaded_file.filename != '':
@@ -69,7 +52,38 @@ def uploadFiles():
         # set the file path
         uploaded_file.save(file_path)
         #save the file
-    return redirect(url_for('index'))
+    return redirect(url_for('dataviz'))
+
+def upload_users():
+    first_name = str(request.form.get('first_name'))
+    last_name = str(request.form.get('last_name'))
+    email = str(request.form.get('email'))
+    firm_name = str(request.form.get('firm_name'))
+
+    cur.execute('''SELECT COUNT(*)
+                   FROM users''')
+    firm_users = cur.fetchone()
+
+    query = """
+        INSERT INTO users (
+            user_id,
+            first_name,
+            last_name,
+            email,
+            created_date
+        ) VALUES (%s, %s, %s, %s, %s)"""
+
+    cur.execute(query, (
+        firm_users[0]+1, 
+        first_name,
+        last_name,
+        email,
+        date.today())
+        )
+    conn.commit()
+
+    
+
 
 def parseCSV(filePath):
     # CSV Column Names
@@ -85,10 +99,18 @@ def parseCSV(filePath):
         print(i,row['first_name'],row['last_name'],row['address'],row['street'],row['state'],row['zip'])
             
 
+@app.route("/dataviz", methods=['POST']) #eventually /firm_name/project_name
+def dataviz():
+    return render_template('dataviz.html')
+
+
 
 if (__name__ == "__main__"):
 
     app.run(host='127.0.0.1', port=5000, debug=True, threaded=True)
+
+
+
 
 # to run
 # $ export FLASK_APP=main
