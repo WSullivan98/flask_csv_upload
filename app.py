@@ -1,5 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for
+from flask_bootstrap import Bootstrap
 import sys
+import io
+import base64
 import os
 from os.path import join, dirname, realpath
 
@@ -96,13 +99,13 @@ def uploadFiles():
         #save the file
 
         df = process_data(filePath)
-        print(df.head(), file=sys.stderr)
-    return df
+        C3 = plotview(df)
+    return render_template('dataviz.html', firm_name=firm_name, project_name=project_name, filePath=filePath, image=C3)
 
-def plotview():
+def plotview(df):
     # https://gitlab.com/snippets/1924163
     # Generate Plot
-    fig= figure()
+    fig= Figure()
     annual_sales = df.groupby('inv_year')['Revenue'].sum()
     sales_cohort_data = customer_cohort_data(df)
     years = sales_cohort_data.columns.to_list()
@@ -124,8 +127,12 @@ def plotview():
     # Convert plot to PNG image
     pngImage = io.BytesIO()
     FigureCanvas(fig).print_png(pngImage)
+    # Encode PNG image to base64 string
+    pngImageB64String = "data:image/png;base64,"
+    pngImageB64String += base64.b64encode(pngImage.getvalue()).decode('utf8')
 
-    return render_template('dataviz.html', firm_name=firm_name, project_name=project_name, image=pngImageB64String)
+    image=pngImageB64String
+    return image
 
 
 
